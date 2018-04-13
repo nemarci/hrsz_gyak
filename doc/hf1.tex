@@ -17,8 +17,8 @@
 
 
 %opening
-\title{Szoftvertechnikák 1. HF}
-\author{Németh Márton}
+\title{Hálózati rendszerek és szolgáltatások fejlesztése}
+\author{Lucienne Kachichian, Mikecz Kálmán, Németh Márton}
 
 \begin{document}
 
@@ -42,9 +42,11 @@ A dockerfile egy image leírását tartalmazza. Ez alapján a docker el tud kés
 
 \section{Container vs VM}
 
-\begin{figure}
+	\textcolor{red}{IDE MÉG ÍRNI KÉNE}
+
+\begin{figure}[H]
 	\centering
-	\includegraphics[width=0.7\linewidth]{cont_vs_vm}
+	\includegraphics[width=0.9\linewidth]{cont_vs_vm}
 	\caption{}
 	\label{fig:contvsvm}
 \end{figure}
@@ -67,11 +69,98 @@ A következő parancs elindít még egy redis containert. A link kapcsoló segí
 
 \texttt{docker run --rm -it --link myredis:redis redis /bin/bash}
 
-\begin{figure}
+\begin{figure}[H]
 	\centering
-	\includegraphics[width=0.7\linewidth]{redis.png}
+	\includegraphics[width=0.9\linewidth]{redis.png}
 	\caption{}
 	\label{fig:redis}
+\end{figure}
+
+\section{Egyszerű docker webalkalmazás}
+
+Az alábbi leírás alapján kipróbáltunk néhány egyszerű docker alkalmazást:
+
+\texttt{https://github.com/docker/labs/blob/master/beginner/chapters/webapps.md}
+
+\subsection{Statikus Nginx webalkalmazás}
+
+Először egy statikus weboldalt jelenítettünk meg egy dockerben futó Nginx webszerver segítségével. Először letöltöttük és futtattuk a megfelelő docker image-et:
+
+\texttt{docker run --name static-site -e AUTHOR="Your Name" -d -P dockersamples/static-site}
+
+A \texttt{run} parancs letöltötte a \texttt{dockersamples/static-site} image-et, mert lokálisan nem találta meg. A kapcsolók szerepe:
+
+\begin{itemize}
+	\item \texttt{name}: megadja a container nevét, később így tudunk rá hivatkozni
+	\item \texttt{e}: környezeti változókat állít be a containerber
+	\item \texttt{d}: háttérben futtatja a containert
+	\item \texttt{-P}: a container nyitott portjait a host egy-egy random portjára átirányítja
+\end{itemize}
+
+Ahhoz, hogy a host oldalról elérjük a weboldalt, tudnunk kell, hogy melyik porton érjük el a containert. Ezt az alábbi paranccsal kérdezhetjük le:
+
+\texttt{docker port static-site}
+
+Itt a \texttt{static-site} a container neve, amit korábban a \texttt{run} parancsnál megadtunk.
+
+Ezután a webszervert elérhetjük a \texttt{localhost:port} címen, ahol a port helyére azt a portot kell írni, amit a \texttt{docker port} parancs megadott (a containeren belül a webszerver a 80-as porton fut). A webszerver működése a \ref{fig:webapp1}. ábrán látható.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\linewidth]{webapp1}
+	\caption{}
+	\label{fig:webapp1}
+\end{figure}
+
+\subsection{Python Flask webalkalmazás létrehozása Dockerfile segítségével}
+
+Az alábbi \texttt{Dockerfile} segítségével hoztuk létre a docker image-et:
+
+\texttt{FROM alpine:3.5\\
+	RUN apk add --update py-pip\\
+	COPY requirements.txt /usr/src/app/\\
+	RUN pip install --no-cache-dir -r /usr/src/app/requirements.txt\\
+	COPY app.py /usr/src/app/\\
+	COPY templates/index.html /usr/src/app/templates/\\
+	EXPOSE 5000\\
+	CMD ["python", "/usr/src/app/app.py"]}
+
+A \texttt{Dockerfile} sorainak magyarázata:
+
+\begin{itemize}
+	\item \texttt{FROM alpine:3.5}: ezt a docker image-et használjuk kiindulásként. Az összes többi sor ehhez fog újabb rétegeket hozzáadni
+	\item \texttt{COPY}: a hoston levő fájlt a docker image-be másolja a megadott helyre
+	\item \texttt{RUN}: lefuttat egy parancsot a docker image build-elése közben
+	\item \texttt{EXPOSE}: kinyitja a megadott portot
+	\item \texttt{CMD}: megadja a container elindításakor lefuttatandó parancsot
+\end{itemize}
+
+A docker image által használt fájlok:
+
+\begin{itemize}
+	\item \texttt{requirements.txt}: ebben a fájlban van benne annak a python modulnak a neve, amit a \texttt{pip} csomagkezelővel fel kell telepíteni.
+	\item \texttt{app.py}: ez maga a webszerver
+	\item \texttt{templates/index.html} ez egy html template fájl, amit a webszerver felhasznál
+\end{itemize}
+
+Az alábbi paranccsal létrehozhatjuk az image-et:
+
+\texttt{docker build -t alpine-flask .}
+
+A \texttt{t} kapcsoló az image tag-et adja meg, később ezzel tudunk hivatkozni rá. A végén levő pont a \texttt{Dockerfile} helyét adja meg (jelen esetben az éppen aktuális könyvtár).
+
+\vskip10pt
+Ezután ugyanúgy futtathatjuk a containert, mint az előző példában:
+
+\texttt{docker run -p 8888:5000 --name myfirstapp alpine-flask}
+
+A \texttt{p} kapcsoló segítségével konkrétan megadhatjuk, hogy a container melyik portja a host melyik portjára legyen átirányítva. Jelen esetben a container 5000-es portját a host 8888-as portján keresztül érhetjük el.  A webszerver működése a \ref{fig:cats}. ábrán látható.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\linewidth]{cats}
+	\caption{}
+	\label{fig:cats}
 \end{figure}
 
 
