@@ -10,3 +10,4 @@
 \BOOKMARK [1][-]{section.4}{Egyszeru docker webalkalmaz\341s}{}% 10
 \BOOKMARK [2][-]{subsection.4.1}{Statikus Nginx webalkalmaz\341s}{section.4}% 11
 \BOOKMARK [2][-]{subsection.4.2}{Python Flask webalkalmaz\341s l\351trehoz\341sa Dockerfile seg\355ts\351g\351vel}{section.4}% 12
+\BOOKMARK [1][-]{section.5}{Docker swarm}{}% 13

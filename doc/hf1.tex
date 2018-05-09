@@ -163,5 +163,41 @@ A \texttt{p} kapcsoló segítségével konkrétan megadhatjuk, hogy a container 
 	\label{fig:cats}
 \end{figure}
 
+\section{Docker swarm}
+
+A docker swarm lényege, hogy egy alkalmazást több containerben tudunl futtatni, így az erőforrásokat meg tudjuk osztani. A swarm tagjai containerek, amiknek két szerepük lehet: a manegerek irányítják a swarm működését, a workerek pedig elvégzik a feladatokat.
+
+A swarm működtetéséhez először létrehoztunk két virtuális gépet, az egyikben a manager, a másikban a worker fog futni. Ezt az alábbi paranccsal tehetjük meg:
+
+\texttt{docker-machine create --driver virtualbox myvm1}
+
+\texttt{docker-machine create --driver virtualbox myvm2}
+
+A \texttt{docker-machine ls} paranccsal listázhatjuk a futó virtuális gépeket, és az IP-címüket is megnézhetjük.
+
+A swarmot az alábbi paranccsal hozhatjuk létre:
+
+\texttt{docker-machine ssh myvm1 "docker swarm init --advertise-addr <myvm1 ip>"}
+
+Ez a parancs a \texttt{myvm1} nevű gépben elindítja a swarmot. Ez a gép manager lesz. Létrehozáskor a swarm generál egy tokent, amire szükség van, amikor egy másik gép akar csatlakozni a swarmhoz. A swarmhoz workerként az alábbi paranccsal csatlakozhat a \texttt{myvm2} gép.
+
+\texttt{docker-machine ssh myvm2 "docker swarm join --token <token> <ip>:2377"}
+
+A docker swarm-ban service-eket futtathatunk. Egy service áll egy docker image-ből, valamint egyéb paraméterekből, például: containerek száma, CPU használati korlát, RAM használati korlát, port forwarding beállítások, stb. A mi példánkban egy korábban létrehozott, a docker hubra feltöltött image-et használtunk, amit 5 példányban futtattunk a swarmon.
+
+A service-t a \texttt{docker-compose.yml} fájl írja le. Egy ilyen fájl például így nézhet ki:
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.7\linewidth]{service}
+	\caption{}
+	\label{fig:service}
+\end{figure}
+
+Ezt a service-t az alábbi paranccsal tudjuk futtatni a korábban létrehozott swarmon:
+
+\texttt{docker-machine ssh myvm1 "docker stack deploy -c docker-compose.yml getstartedlab"}
+
+Ezután a swarm elkezdi futtatni a fenti fájlban megadott service-t.
 
 \end{document}
